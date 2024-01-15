@@ -41,7 +41,7 @@ MultiLidarCalibrationNdt::MultiLidarCalibrationNdt()
 
   // tf2 broadcaster
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-
+  
   sync_.registerCallback(std::bind(
     &MultiLidarCalibrationNdt::callbackLidars, this, std::placeholders::_1,
     std::placeholders::_2));
@@ -66,6 +66,10 @@ void MultiLidarCalibrationNdt::callbackLidars(const sensor_msgs::msg::PointCloud
 
   pcl::fromROSMsg(*point_1, *source_pointcloud);
   pcl::fromROSMsg(*point_2, *target_pointcloud);
+  std::vector<int> index_source;
+  std::vector<int> index_target;
+  pcl::removeNaNFromPointCloud(*source_pointcloud, *source_pointcloud, index_source);
+  pcl::removeNaNFromPointCloud(*target_pointcloud, *target_pointcloud, index_target);
 
   approximate_voxel_filter_.setInputCloud(target_pointcloud);
   approximate_voxel_filter_.filter(*filtered_target_pointcloud);
@@ -75,19 +79,19 @@ void MultiLidarCalibrationNdt::callbackLidars(const sensor_msgs::msg::PointCloud
 
   ndt_.align(*final_pointcloud, current_transform_mtraix_);
 
+
   if (ndt_.hasConverged())
   {
     current_transform_mtraix_ = ndt_.getFinalTransformation();
-    std::cout << "NDT converged." << std::endl
-              << "The score is " << ndt_.getFitnessScore() << std::endl;
-    std::cout << "Transformation matrix:" << std::endl;
-    std::cout << current_transform_mtraix_ << std::endl;
+    std::cout << "The score is " << ndt_.getFitnessScore() << std::endl;
+    // std::cout << "Transformation matrix:" << std::endl;
+    // std::cout << current_transform_mtraix_ << std::endl;
     Eigen::Matrix3f rotation_matrix = current_transform_mtraix_.block(0, 0, 3, 3);
     Eigen::Vector3f translation_vector = current_transform_mtraix_.block(0, 3, 3, 1);
-    std::cout << "This transformation can be replicated using:" << std::endl;
-    std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
-              << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
-              << " " << point_2->header.frame_id.c_str() << std::endl;
+    // std::cout << "This transformation can be replicated using:" << std::endl;
+    // std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
+              // << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
+              // << " " << point_2->header.frame_id.c_str() << std::endl;
 
     Eigen::Quaternionf q(rotation_matrix);
     geometry_msgs::msg::TransformStamped t;
@@ -103,8 +107,29 @@ void MultiLidarCalibrationNdt::callbackLidars(const sensor_msgs::msg::PointCloud
     t.transform.rotation.w = q.w();
     tf_broadcaster_->sendTransform(t);
   }
+  if (init_state_ == false)
+  {
+    higher_ndt_ = ndt_;
+    init_state_ = true;
+  }
+  if (ndt_.getFitnessScore() > higher_ndt_.getFitnessScore())
+  {
+    higher_ndt_ = ndt_;
+    current_transform_mtraix_ = higher_ndt_.getFinalTransformation();
+    std::cout <<"============================" <<std::endl;
+    std::cout << "Now, Highest NDT is ." << std::endl
+              << "The score is " << higher_ndt_.getFitnessScore() << std::endl;
+    std::cout << "Transformation matrix:" << std::endl;
+    std::cout << current_transform_mtraix_ << std::endl;
+    Eigen::Matrix3f rotation_matrix = current_transform_mtraix_.block(0, 0, 3, 3);
+    Eigen::Vector3f translation_vector = current_transform_mtraix_.block(0, 3, 3, 1);
+    std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
+              << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
+              << " " << point_2->header.frame_id.c_str() << std::endl;
+    std::cout <<"============================" <<std::endl;
+  }
   rclcpp::Time end_time = this->now();
-  std::cout << "process time: " << (end_time - start_time).seconds() * 1000.0 << "ms.\n";
+  // std::cout << "process time: " << (end_time - start_time).seconds() * 1000.0 << "ms.\n";
 }
 
 } // namespace multi_lidar_calibration_ndt

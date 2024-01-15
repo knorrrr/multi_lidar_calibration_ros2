@@ -68,6 +68,10 @@ void MultiLidarCalibrationIcp::callbackLidars(const sensor_msgs::msg::PointCloud
 
   pcl::fromROSMsg(*point_1, *source_pointcloud);
   pcl::fromROSMsg(*point_2, *target_pointcloud);
+  std::vector<int> index_source;
+  std::vector<int> index_target;
+  pcl::removeNaNFromPointCloud(*source_pointcloud, *source_pointcloud, index_source);
+  pcl::removeNaNFromPointCloud(*target_pointcloud, *target_pointcloud, index_target);
 
   approximate_voxel_filter_.setInputCloud(target_pointcloud);
   approximate_voxel_filter_.filter(*filtered_target_pointcloud);

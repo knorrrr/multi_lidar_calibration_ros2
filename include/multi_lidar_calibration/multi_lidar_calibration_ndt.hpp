@@ -75,6 +75,9 @@ private:
 public:
   MultiLidarCalibrationNdt();
   ~MultiLidarCalibrationNdt();
+  // higher ndt registration
+  pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> higher_ndt_;
+  bool init_state_= false;
   void callbackLidars(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr & point_1,
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr & point_2);
