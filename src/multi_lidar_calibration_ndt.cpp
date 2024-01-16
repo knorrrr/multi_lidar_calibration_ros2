@@ -84,6 +84,7 @@ void MultiLidarCalibrationNdt::callbackLidars(const sensor_msgs::msg::PointCloud
   {
     current_transform_mtraix_ = ndt_.getFinalTransformation();
     std::cout << "The score is " << ndt_.getFitnessScore() << std::endl;
+
     // std::cout << "Transformation matrix:" << std::endl;
     // std::cout << current_transform_mtraix_ << std::endl;
     Eigen::Matrix3f rotation_matrix = current_transform_mtraix_.block(0, 0, 3, 3);
@@ -106,27 +107,28 @@ void MultiLidarCalibrationNdt::callbackLidars(const sensor_msgs::msg::PointCloud
     t.transform.rotation.z = q.z();
     t.transform.rotation.w = q.w();
     tf_broadcaster_->sendTransform(t);
-  }
-  if (init_state_ == false)
-  {
-    higher_ndt_ = ndt_;
-    init_state_ = true;
-  }
-  if (ndt_.getFitnessScore() > higher_ndt_.getFitnessScore())
-  {
-    higher_ndt_ = ndt_;
-    current_transform_mtraix_ = higher_ndt_.getFinalTransformation();
-    std::cout <<"============================" <<std::endl;
-    std::cout << "Now, Highest NDT is ." << std::endl
-              << "The score is " << higher_ndt_.getFitnessScore() << std::endl;
-    std::cout << "Transformation matrix:" << std::endl;
-    std::cout << current_transform_mtraix_ << std::endl;
-    Eigen::Matrix3f rotation_matrix = current_transform_mtraix_.block(0, 0, 3, 3);
-    Eigen::Vector3f translation_vector = current_transform_mtraix_.block(0, 3, 3, 1);
-    std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
-              << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
-              << " " << point_2->header.frame_id.c_str() << std::endl;
-    std::cout <<"============================" <<std::endl;
+
+    if (init_state_ == false)
+    {
+      init_state_ = true;
+    }
+
+    if (ndt_.getFitnessScore() > higher_fitness_score_)
+    {
+      higher_fitness_score_ = ndt_.getFitnessScore();
+      current_transform_mtraix_ = ndt_.getFinalTransformation();
+      std::cout <<"============================" <<std::endl;
+      std::cout << "Now, Highest NDT is ." << std::endl
+                << "The score is " << ndt_.getFitnessScore() << std::endl;
+      std::cout << "Transformation matrix:" << std::endl;
+      std::cout << current_transform_mtraix_ << std::endl;
+      Eigen::Matrix3f rotation_matrix = current_transform_mtraix_.block(0, 0, 3, 3);
+      Eigen::Vector3f translation_vector = current_transform_mtraix_.block(0, 3, 3, 1);
+      std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
+                << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
+                << " " << point_2->header.frame_id.c_str() << std::endl;
+      std::cout <<"============================" <<std::endl;
+    }
   }
   rclcpp::Time end_time = this->now();
   // std::cout << "process time: " << (end_time - start_time).seconds() * 1000.0 << "ms.\n";

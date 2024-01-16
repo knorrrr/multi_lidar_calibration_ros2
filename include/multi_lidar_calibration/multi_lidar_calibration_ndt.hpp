@@ -62,6 +62,7 @@ private:
 
   // transform matrix
   Eigen::Matrix4f current_transform_mtraix_;
+  double higher_fitness_score_ = 0.0;
 
   // tf2
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
@@ -76,7 +77,6 @@ public:
   MultiLidarCalibrationNdt();
   ~MultiLidarCalibrationNdt();
   // higher ndt registration
-  pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> higher_ndt_;
   bool init_state_= false;
   void callbackLidars(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr & point_1,
