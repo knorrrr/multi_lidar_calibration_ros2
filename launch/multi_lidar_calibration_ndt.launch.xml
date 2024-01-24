@@ -2,12 +2,13 @@
 <launch>
   <arg name="initial_pose" default="[0.0, 0.0, -0.4, 0.0, 1.57, 0.0]" />
   <arg name="leaf_size" default="0.2" />
-  <arg name="max_iteration" default="10" />
+  <arg name="max_iteration" default="1000" />
   <arg name="transform_epsilon" default="0.001" />
   <arg name="step_size" default="0.05" />
   <arg name="resolution" default="0.5" />
-  <arg name="input/source_pointcloud" default="/rs16/points" />
-  <arg name="input/target_pointcloud" default="/rsbp/points" />
+  <arg name="input/source_pointcloud" default="/vlp32c/velodyne_points" />
+  <!-- <arg name="input/target_pointcloud" default="/vlp16/velodyne_points" /> -->
+  <arg name="input/target_pointcloud" default="/os1/points" />
 
   <node pkg="multi_lidar_calibration" name="multi_lidar_calibration_ndt_node" exec="multi_lidar_calibration_ndt_node" output="screen">
     <param name="initial_pose" value="$(var initial_pose)"/>

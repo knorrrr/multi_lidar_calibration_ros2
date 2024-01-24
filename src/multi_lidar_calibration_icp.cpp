@@ -84,16 +84,15 @@ void MultiLidarCalibrationIcp::callbackLidars(const sensor_msgs::msg::PointCloud
   if (icp_.hasConverged())
   {
     current_transform_mtraix_ = icp_.getFinalTransformation();
-    std::cout << "ICP converged." << std::endl
-              << "The score is " << icp_.getFitnessScore() << std::endl;
-    std::cout << "Transformation matrix:" << std::endl;
-    std::cout << current_transform_mtraix_ << std::endl;
+    std::cout << "The score is " << icp_.getFitnessScore() << std::endl;
+    // std::cout << "Transformation matrix:" << std::endl;
+    // std::cout << current_transform_mtraix_ << std::endl;
     Eigen::Matrix3f rotation_matrix = current_transform_mtraix_.block(0, 0, 3, 3);
     Eigen::Vector3f translation_vector = current_transform_mtraix_.block(0, 3, 3, 1);
-    std::cout << "This transformation can be replicated using:" << std::endl;
-    std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
-              << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
-              << " " << point_2->header.frame_id.c_str() << std::endl;
+    // std::cout << "This transformation can be replicated using:" << std::endl;
+    // std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
+              // << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
+              // << " " << point_2->header.frame_id.c_str() << std::endl;
 
     Eigen::Quaternionf q(rotation_matrix);
     geometry_msgs::msg::TransformStamped t;
@@ -108,6 +107,23 @@ void MultiLidarCalibrationIcp::callbackLidars(const sensor_msgs::msg::PointCloud
     t.transform.rotation.z = q.z();
     t.transform.rotation.w = q.w();
     tf_broadcaster_->sendTransform(t);
+
+    if (icp_.getFitnessScore() > higher_fitness_score_)
+    {
+      std::cout <<"============================" <<std::endl;
+      higher_fitness_score_ = icp_.getFitnessScore();
+      std::cout << "higher_fitness_score_: " << higher_fitness_score_ << std::endl;
+      current_transform_mtraix_ = icp_.getFinalTransformation();
+      std::cout << "Transformation matrix:" << std::endl;
+      std::cout << current_transform_mtraix_ << std::endl;
+      Eigen::Matrix3f rotation_matrix = current_transform_mtraix_.block(0, 0, 3, 3);
+      Eigen::Vector3f translation_vector = current_transform_mtraix_.block(0, 3, 3, 1);
+      std::cout << "This transformation can be replicated using:" << std::endl;
+      std::cout << "ros2 run tf2_ros static_transform_publisher " << translation_vector.transpose()
+                << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " " << point_1->header.frame_id.c_str() 
+                << " " << point_2->header.frame_id.c_str() << std::endl;
+      std::cout <<"============================" <<std::endl;
+    }
   }
 }
 

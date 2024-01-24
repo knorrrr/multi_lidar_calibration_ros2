@@ -6,8 +6,10 @@
   <arg name="max_coorespondence_distance" default="0.05" />
   <arg name="euclidean_fitness_epsilon" default="0.5" />
   <arg name="ransac_outlier_rejection_threshold" default="1.1" />
-  <arg name="input/source_pointcloud" default="/rs16/points" />
-  <arg name="input/target_pointcloud" default="/rsbp/points" />
+  <!-- <arg name="input/source_pointcloud" default="/rs16/points" />
+  <arg name="input/target_pointcloud" default="/rsbp/points" /> -->
+  <arg name="input/source_pointcloud" default="/vlp32c/velodyne_points" />
+  <arg name="input/target_pointcloud" default="/os1/points" />
 
   <node pkg="multi_lidar_calibration" name="multi_lidar_calibration_icp_node" exec="multi_lidar_calibration_icp_node" output="screen">
     <param name="initial_pose" value="$(var initial_pose)"/>

@@ -70,6 +70,7 @@ private:
     SyncPolicy;
   typedef message_filters::Synchronizer<SyncPolicy> SyncExact;
   SyncExact sync_;
+  double higher_fitness_score_ = 0.0;
 
 public:
   // explicit MultiLidarCalibrationIcp(const rclcpp::NodeOptions & node_options);
